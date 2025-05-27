@@ -1,47 +1,60 @@
 <?php
+ 
 ob_start();
-require_once("themes/config.php");
- 
-visitor_count();
-include(TEMPLATE_FRONT . DS . "header-style.php");
+require_once("../themes/config.php");
 
-error_reporting(E_ALL);
-ini_set('display_errors', TRUE);
+
+if(!isset($_SESSION['username_admin'])){
+    redirect("../../login-admin");
+}  
+include(TEMPLATE_BACK. "/header.php"); 
+include(TEMPLATE_BACK. "/left_bar.php");  // END Sidebar -->
+
+include(TEMPLATE_BACK . "/right_bar.php");   //Sidebar -->
+	
+if($_SERVER['REQUEST_URI'] == "/admin/" || $_SERVER['REQUEST_URI'] == "/admin/index.php")  {
+    include(TEMPLATE_BACK . "/admin_content.php"); 
+}  			
+
+//page extend session for all category and pages === //	
+		
+if(isset($_GET['admin_profile'])){
+  include(TEMPLATE_BACK . "/admin_profile.php");
+}	
+if(isset($_GET['auth-register'])){
+  include(TEMPLATE_BACK . "/auth-register.php");
+}
+if(isset($_GET['register-members'])){
+  include(TEMPLATE_BACK . "/register-members.php");
+}
+if(isset($_GET['premium-price'])){
+  include(TEMPLATE_BACK . "/premium-price.php");
+} 
+if(isset($_GET['admin-users-profile'])){
+  include(TEMPLATE_BACK . "/admin-users-profile.php");
+}
+if(isset($_GET['all-feed-post'])){
+  include(TEMPLATE_BACK . "/all-feed-post.php");
+} 
+if(isset($_GET['message'])){
+  include(TEMPLATE_BACK . "/message.php");
+}
+if(isset($_GET['help-activities'])){
+  include(TEMPLATE_BACK . "/help-activities.php");
+}
+if(isset($_GET['recent_payment'])){
+  include(TEMPLATE_BACK . "/recent_payment.php");
+}
+if(isset($_GET['website-visitors'])){
+  include(TEMPLATE_BACK . "/website-visitors.php");
+}
+if (isset($_GET['del_plans'])) {
+	include(TEMPLATE_BACK . "/del_plans.php");
+}
  
-include(TEMPLATE_FRONT . DS . "body.php"); 
-include(TEMPLATE_FRONT . DS . "footer-style.php"); 
- 
+include(TEMPLATE_BACK. "/footer-admin.php");
+
 ob_end_flush();
-?> 
-<script>
-jQuery(document).ready(function($){
-	$(document).keydown(function(event){
-		var pressedKey = String.fromCharCode(event.keyCode).toLowerCase();
 
-		if (event.ctrlKey && (pressedKey == "c" || pressedKey == "u")) {
-			alert('Sorry, This Functionality Has Been Disabled!');
-			//disable key press porcessing
-			return false;
-		}
-	});
-});	
-document.onkeypress = function (event) {
-	event = (event || window.event);
-	if (event.keyCode == 123) {
-		return false;
-	}
-}
-document.onmousedown = function (event) {
-	event = (event || window.event);
-	if (event.keyCode == 123) {
-		return false;
-	}
-}
-document.onkeydown = function (event) {
-	event = (event || window.event);
-	if (event.keyCode == 123) {
-		return false;
-	}
-}
-</script>
+?>
 

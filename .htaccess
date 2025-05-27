@@ -1,0 +1,114 @@
+
+RewriteEngine On
+
+#DEFINING THE URL REWRITING PREFIX
+RewriteBase "/"
+
+#FOLDERS EXCEPTED FROM THE URL REWRITING
+RewriteRule (assets/.*) $1 [QSA,L] 
+RewriteRule (layouts/.*) $1 [QSA,L] 
+RewriteRule (themes/.*) $1 [QSA,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule (.*) index.php  [QSA,L]
+
+#ARE YOU CONNECTED BY HTTPS?
+RewriteCond %{HTTPS} off
+
+#IF CONNECTED BY HTTP, REDIRECTING ON HTTPS
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+
+#PREVENT VIEWING THE APPLICATION STRUCTURE
+Options -Indexes
+
+#THE SERVER MUST FOLLOW SYMBOLIC LINKS
+Options +FollowSymlinks
+
+## EXCEPTION: ALL ROBOTS, EVEN ANONYMOUS OR BANNED ONES CAN ACCESS THESE FILES
+
+RewriteCond %{REQUEST_URI} !^/robots.txt
+RewriteCond %{REQUEST_URI} !^/sitemap.xml
+##
+RewriteCond %{HTTP_USER_AGENT} ^-?$ [OR] ## ANONYMOUS
+RewriteCond %{HTTP_USER_AGENT} ^curl|^Fetch\ API\ Request|GT::WWW|^HTTP::Lite|httplib|^Java|^LeechFTP|lwp-trivial|^LWP|libWeb|libwww|^PEAR|PECL::HTTP|PHPCrawl|PycURL|python|^ReGet|Rsync|Snoopy|URI::Fetch|urllib|WebDAV|^Wget [NC] ## LABRARIES / HTTP CLASSES THAT YOU DON'T LIKE. PAY ATTENTION, THIS CAN BLOCK SOME OF YOUR CMS FEATURES. DON'T DELETE, BUT LOOK FOR THE HTTP CLASS INVOLVED (ASK TO YOUR CMS DEVELOPERS).THIS LIST BLOCKS  80% OF SPAMMER ROBOTS. YOU NEED TO KEEP IT.
+RewriteCond %{HTTP_USER_AGENT} ^[bcdfghjklmnpqrstvwxz\ ]{10,}|^[0-9a-z]{15,}|^[0-9A-Za-z]{19,}|^[A-Za-z]{3,}\ [a-z]{4,}\ [a-z]{4,} [OR] ## THOSE WHO MAKE UP NAME BY CHANCE
+RewriteRule (.*) - [F]
+
+### FILTER AGAINST  XSS,  HTTP REDIRECTS, base64_encode, PHP GLOBALS VARIABLES THROUGH URL, EDITING VARIABLE_REQUEST THROUGH URL, TESTING PHP FLAWS, SIMPLE SQL INJECTION
+
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} (GET|POST) [NC]
+#RewriteCond %{QUERY_STRING} ^(.*)(%3C|<)/?script(.*)$ [NC,OR]
+#RewriteCond %{QUERY_STRING} ^(.*)(%3D|=)?javascript(%3A|:)(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)document\.location\.href(.*)$ [OR]
+RewriteCond %{QUERY_STRING} ^.*(%24&x).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^.*(127\.0).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)(%3D|=)(https?|ftp|mosConfig)(%3A|:)//(.*)$ [NC,OR] ## PAY ATTENTION TO THIS RULE. IT CAN OVERRULE SOME OF YOUR REDIRECTS LIKE: http://www.url.com/index.php?r=http://www.google.fr ##
+RewriteCond %{QUERY_STRING} ^.*(_encode|localhost|loopback).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)GLOBALS(=|[|%[0-9A-Z]{0,2})(.*)$ [OR]
+RewriteCond %{QUERY_STRING} ^(.*)_REQUEST(=|[|%[0-9A-Z]{0,2})(.*)$ [OR]
+RewriteCond %{QUERY_STRING} ^(.*)(SELECT(%20|\+)|UNION(%20|\+)ALL|INSERT(%20|\+)|DELETE(%20|\+)|CHAR\(|UPDATE(%20|\+)|REPLACE(%20|\+)|LIMIT(%20|\+)|CONCAT(%20|\+)|DECLARE(%20|\+))(.*)$ [NC]
+RewriteRule (.*) - [F]
+
+### CANCELLING FALSE URLS OR OBSOLETE SYSTEMS
+#RedirectMatch 403 (\.\./|base64|boot\.ini|eval\(|\(null\)|^[-_a-z0-9/\.]*//.*|/etc/passwd|^/_vti.*|^/MSOffice.*|/fckeditor/|/elfinder/|zoho/|/jquery-file-upload/server/|/assetmanager/|wwwroot|e107\_)
+# DISABLING REQUETES, TRACE, TRACK AND DELETE METHODS
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} ^(TRACE|DELETE|TRACK) [NC]
+RewriteRule ^.* - [F]
+
+### ONLY index.php FILE IS SERVED AS FIRST DEFAULT FILE. THE OTHER FILES ARE FORBIDDEN
+DirectoryIndex index.php
+
+### PROHIBITING OTHER INDEX FILES
+<Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">
+order allow,deny
+deny from all
+</Files>
+
+### PROHIBITING OTHER FILE FORMATS TOBE DISPLAYED
+### CAN BE PROCESSED BY THE SERVER BUT CANNOT BE DISPLAYDED ON THE WEB BROWSER
+<Files ~ "\.(inc|class|sql|ini|conf|exe|dll|bin|tpl|bkp|dat|c|h|py|spd|theme|module|mdb|rar|bash|git|hg|log|svn|swp|cvs)$">
+deny from all
+</Files>
+
+### PROHIBITING THE DISPLAY OF CERTAIN FILES LIKE config, option, login, setup, install, admin, home, default, xmlrpc, m_init, m_operations_bdd.
+### ADAPT IF IT POSES PROBLEMS, TAKE OUT ESPECIALLY wp-(login|admin|config)| IF YOU ARE USING WORDPRESS
+<Files ~ "^(wp-(login|admin|config)|config(\.inc)?|install?|admin|login|configure|m_init|m_operations_bdd|configuration|options?\.inc|option|settings?(\.inc)?|functions?(\.inc)?|setup(\.inc)?|default|home|xmlrpc|bigdump|uploadTester|errors?|test|data|members?|hacke?r?d?|[-_a-z0-9.]*mafia[-_a-z0-9.]*|[-_a-z0-9.]*power[-_a-z0-9.]*|[-_a-z0-9.]*jihad[-_a-z0-9.]*|php|shell|ssh|root|cmd|[0-9]{1,6})\.(p?s?x?htm?l?|txt|aspx?|cfml?|cgi|pl|php[3-9]{0,1}|jsp?|sql|xml)$">
+order allow,deny
+deny from all
+</Files>
+
+### AVOIDING THE THIEF OF PICTURES, VIDEO, SOUND, CSS FILES, PDF AND ZIP
+### ALL THE VISITORS MUST GO THROUGH THE APPLICATION/WEBSITE
+RewriteEngine on
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^https?://[-a-z0-9.]*domain\.com$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://[-a-z0-9.]*domain\.com/.*$ [NC]
+RewriteCond %{HTTP_REFERER} !^https?://.*(translate|paypal|google|bing|yahoo|yandex|baidu|linkedin|facebook|qwant|duck|ixquick|pinterest|twitter).*$ [NC] ## THESE DOMAIN NAMES CAN DISPLAY THE WEBSITE ITEMS
+RewriteCond %{HTTP_REFERER} !^mobile?://.*$ [NC] ##  CONNECTIONS THROUGH MOBILE APPLICATIONS THE  CAN DISPLAY THE WEBSITE ITEMS
+RewriteRule .*\.(gif|jpe?g?|jp2|png|svgz?|css|pdf|zip|gz|js|mp3|m4a|mp4|mov|divx|avi|wma?v?|wmp|swf|flv|docx?|xlsx?|pptx?|vbs|rtf|asf?x?|odt|ods|odp|odg|odb)$ - [NC,F]
+
+### FILTER AGAINST PHPSHELL.PHP, REMOTEVIEW, c99Shell AND OTHERS
+RewriteEngine On
+RewriteCond %{REQUEST_URI} .*((php|my)?shell|remview.*|phpremoteview.*|sshphp.*|pcom|nstview.*|c99|r57|webadmin.*|phpget.*|phpwriter.*|fileditor.*|locus7.*|storm7.*)\.(p?s?x?htm?l?|txt|aspx?|cfml?|cgi|pl|php[3-9]{0,1}|jsp?|sql|xml) [NC,OR]
+RewriteCond %{REQUEST_METHOD} (GET|POST) [NC]
+RewriteCond %{QUERY_STRING} ^(.*)=/public_html/(.*)$ [OR]
+RewriteCond %{QUERY_STRING} ^work_dir=.*$ [OR]
+RewriteCond %{QUERY_STRING} ^command=.*&output.*$ [OR]
+RewriteCond %{QUERY_STRING} ^nts_[a-z0-9_]{0,10}=.*$ [OR]
+RewriteCond %{QUERY_STRING} ^(.*)cmd=.*$ [OR] ## PAY ATTEHTION TO THIS RULE. IT CAN OVERRULE YOUR WEBSITE ##
+RewriteCond %{QUERY_STRING} ^c=(t|setup|codes)$ [OR]
+RewriteCond %{QUERY_STRING} ^act=((about|cmd|selfremove|chbd|trojan|backc|massbrowsersploit|exploits|grablogins|upload.*)|((chmod|f)&f=.*))$ [OR]
+RewriteCond %{QUERY_STRING} ^act=(ls|search|fsbuff|encoder|tools|processes|ftpquickbrute|security|sql|eval|update|feedback|cmd|gofile|mkfile)&d=.*$ [OR]
+RewriteCond %{QUERY_STRING} ^&?c=(l?v?i?&d=|v&fnot=|setup&ref=|l&r=|d&d=|tree&d|t&d=|e&d=|i&d=|codes|md5crack).*$ [OR]
+RewriteCond %{QUERY_STRING} ^(.*)([-_a-z]{1,15})=(ls|cd|cat|rm|mv|vim|chmod|chdir|concat|mkdir|rmdir|pwd|clear|whoami|uname|tar|zip|unzip|gzip|gunzip|grep|more|ln|umask|telnet|ssh|ftp|head|tail|which|mkmode|touch|logname|edit_file|search_text|find_text|php_eval|download_file|ftp_file_down|ftp_file_up|ftp_brute|mail_file|mysql|mysql_dump|db_query)([^a-zA-Z0-9].+)*$ [OR]
+RewriteCond %{QUERY_STRING} ^(.*)(wget|shell_exec|passthru|system|exec|popen|proc_open)(.*)$
+RewriteRule (.*) - [F]
+
+
+RewriteEngine on
+RewriteBase /
+RewriteCond %{HTTP_USER_AGENT} ADSARobot|ah-ha|almaden|aktuelles|Anarchie|amzn_assoc|ASPSeek|ASSORT|ATHENS|Atomz|attach|attache|autoemailspider|BackWeb|Bandit|BatchFTP|bdfetch|big.brother|BlackWidow|bmclient|Boston\ Project|BravoBrian\ SpiderEngine\ MarcoPolo|Bot\ mailto:craftbot@yahoo.com|Buddy|Bullseye|bumblebee|capture|CherryPicker|ChinaClaw|CICC|clipping|Collector|Copier|Crescent|Crescent\ Internet\ ToolPak|Custo|cyberalert|DA$|Deweb|diagem|Digger|Digimarc|DIIbot|DISCo|DISCo\ Pump|DISCoFinder|Download\ Demon|Download\ Wonder|Downloader|Drip|DSurf15a|DTS.Agent|EasyDL|eCatch|ecollector|efp@gmx\.net|Email\ Extractor|EirGrabber|email|EmailCollector|EmailSiphon|EmailWolf|Express\ WebPictures|ExtractorPro|EyeNetIE|FavOrg|fastlwspider|Favorites\ Sweeper|Fetch|FEZhead|FileHound|FlashGet\ WebWasher|FlickBot|fluffy|FrontPage|GalaxyBot|Generic|Getleft|GetRight|GetSmart|GetWeb!|GetWebPage|gigabaz|Girafabot|Go\!Zilla|Go!Zilla|Go-Ahead-Got-It|GornKer|gotit|Grabber|GrabNet|Grafula|Green\ Research|grub-client|Harvest|hhjhj@yahoo|hloader|HMView|HomePageSearch|http\ generic|HTTrack|httpdown|httrack|ia_archiver|IBM_Planetwide|Image\ Stripper|Image\ Sucker|imagefetch|IncyWincy|Indy*Library|Indy\ Library|informant|Ingelin|InterGET|Internet\ Ninja|InternetLinkagent|Internet\ Ninja|InternetSeer\.com|Iria|Irvine|JBH*agent|JetCar|JOC|JOC\ Web\ Spider|JustView|KWebGet|Lachesis|larbin|LeechFTP|LexiBot|lftp|libwww|likse|Link|Link*Sleuth|LINKS\ ARoMATIZED|LinkWalker|LWP|lwp-trivial|Mag-Net|Magnet|Mac\ Finder|Mag-Net|Mass\ Downloader|MCspider|Memo|Microsoft.URL|MIDown\ tool|Mirror|Missigua\ Locator|Mister\ PiX|MMMtoCrawl\/UrlDispatcherLLL|^Mozilla$|Mozilla.*Indy|Mozilla.*NEWT|Mozilla*MSIECrawler|MS\ FrontPage*|MSFrontPage|MSIECrawler|MSProxy|multithreaddb|nationaldirectory|Navroad|NearSite|NetAnts|NetCarta|NetMechanic|netprospector|NetResearchServer|NetSpider|Net\ Vampire|NetZIP|NetZip\ Downloader|NetZippy|NEWT|NICErsPRO|Ninja|NPBot|Octopus|Offline\ Explorer|Offline\ Navigator|OpaL|Openfind|OpenTextSiteCrawler|OrangeBot|PageGrabber|Papa\ Foto|PackRat|pavuk|pcBrowser|PersonaPilot|Ping|PingALink|Pockey|Proxy|psbot|PSurf|puf|Pump|PushSite|QRVA|RealDownload|Reaper|Recorder|ReGet|replacer|RepoMonkey|Robozilla|Rover|RPT-HTTPClient|Rsync|Scooter|SearchExpress|searchhippo|searchterms\.it|Second\ Street\ Research|Seeker|Shai|Siphon|sitecheck|sitecheck.internetseer.com|SiteSnagger|SlySearch|SmartDownload|snagger|Snake|SpaceBison|Spegla|SpiderBot|sproose|SqWorm|Stripper|Sucker|SuperBot|SuperHTTP|Surfbot|SurfWalker|Szukacz|tAkeOut|tarspider|Teleport\ Pro|Templeton|TrueRobot|TV33_Mercator|UIowaCrawler|UtilMind|URLSpiderPro|URL_Spider_Pro|Vacuum|vagabondo|vayala|visibilitygap|VoidEYE|vspider|Web\ Downloader|w3mir|Web\ Data\ Extractor|Web\ Image\ Collector|Web\ Sucker|Wweb|WebAuto|WebBandit|web\.by\.mail|Webclipping|webcollage|webcollector|WebCopier|webcraft@bea|webdevil|webdownloader|Webdup|WebEMailExtrac|WebFetch|WebGo\ IS|WebHook|Webinator|WebLeacher|WEBMASTERS|WebMiner|WebMirror|webmole|WebReaper|WebSauger|Website|Website\ eXtractor|Website\ Quester|WebSnake|Webster|WebStripper|websucker|webvac|webwalk|webweasel|WebWhacker|WebZIP|Wget|Whacker|whizbang|WhosTalking|Widow|WISEbot|WWWOFFLE|x-Tractor|^Xaldon\ WebSpider|WUMPUS|Xenu|XGET|Zeus.*Webster|Zeus [NC]
+RewriteRule ^.* - [F,L]
